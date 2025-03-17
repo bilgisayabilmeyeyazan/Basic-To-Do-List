@@ -1,40 +1,47 @@
 document.addEventListener("DOMContentLoaded", showTasks);
 
-document.querySelector("form").addEventListener("submit", (event)=>{
-    event.preventDefault();
-    addTask();
-        updateProgressStatus();
+document.querySelector("form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  addTask();
+  updateProgressStatus();
+});
 
-})
+function addTask() {
+  let taskInput = document.getElementById("taskInput");
+  let task = taskInput.value.trim();
+  if (!task) return;
 
-function addTask(){
-    let taskInput = document.getElementById("taskInput");
-    let task = taskInput.value.trim();
-    if(!task) return;
+  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    const taskObj = {
-        taskText: task,
-        completed: false
-    }
-    tasks.push(taskObj);
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+  const taskObj = {
+    taskText: task,
+    completed: false,
+  };
+  tasks.push(taskObj);
+  localStorage.setItem("tasks", JSON.stringify(tasks));
 
-    showTasks();
-    updateProgressStatus();
-    taskInput.value = "";
+  showTasks();
+  updateProgressStatus();
+  taskInput.value = "";
 }
 
-function showTasks(){
-    let taskList = document.getElementById("taskList");
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+function showTasks() {
+  const taskList = document.getElementById("taskList");
+  const clearAllBtn = document.getElementById("clear-all-btn");
 
-    taskList.innerHTML = "";
+  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
-    tasks.forEach((task, index)=>{
-        let li = document.createElement("li");
+  if (tasks.length >= 1) {
+    clearAllBtn.style.display = "block";
+  } else {
+    clearAllBtn.style.display = "none";
+  }
+  taskList.innerHTML = "";
 
-        li.innerHTML = `
+  tasks.forEach((task, index) => {
+    let li = document.createElement("li");
+
+    li.innerHTML = `
           <input type="checkbox" id="task-${index}" />
           <label for="task-${index}" class="checkbox-icon">
             <svg
@@ -61,63 +68,66 @@ function showTasks(){
               />
             </svg>
           </button>
-        `
-        li.className = "task-item";
+        `;
+    li.className = "task-item";
 
-        let delBtn = li.querySelector(".del-button");
-        delBtn.onclick = () => removeTask(index);
- 
-        
-        let checkbox = li.querySelector("input");
-        checkbox.addEventListener("change", ()=>{
-            tasks[index].completed = checkbox.checked;
-            localStorage.setItem("tasks", JSON.stringify(tasks));
-            updateProgressStatus();
-        })
-        checkbox.checked = task.completed;
+    let delBtn = li.querySelector(".del-button");
+    delBtn.onclick = () => removeTask(index);
 
-       taskList.appendChild(li);
-    })
-    updateProgressStatus();
-}
+    let checkbox = li.querySelector("input");
+    checkbox.addEventListener("change", () => {
+      tasks[index].completed = checkbox.checked;
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      updateProgressStatus();
+    });
+    checkbox.checked = task.completed;
 
+    taskList.appendChild(li);
+  });
+  updateProgressStatus();
 
-function removeTask(index){
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    tasks.splice(index, 1);
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+  clearAllBtn.addEventListener("click", () => {
+    localStorage.removeItem("tasks");
     showTasks();
     updateProgressStatus();
+  });
 }
 
-function updateProgressStatus(){
+function removeTask(index) {
   let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  const completedTasks = tasks.filter((task)=>task.completed).length;
-  const progress = tasks.length>0 ? (completedTasks / tasks.length) * 100 : 0;
+  tasks.splice(index, 1);
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  showTasks();
+  updateProgressStatus();
+}
+
+function updateProgressStatus() {
+  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+  const completedTasks = tasks.filter((task) => task.completed).length;
+  const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
   const progressBar = document.querySelector(".progress");
   const progressStat = document.querySelector(".stat");
   const statPhrase = document.querySelector(".stat-phrase");
 
   progressBar.style.width = `${progress}%`;
 
-
-  if(tasks.length) {  
-    progressStat.textContent = `${Math.round(progress*10)/10}%`;
-    if(tasks.length === completedTasks){
+  if (tasks.length) {
+    progressStat.textContent = `${Math.round(progress * 10) / 10}%`;
+    if (tasks.length === completedTasks) {
       statPhrase.textContent = `Well Done!`;
       celebration();
-    } else if(progress > 0 && progress < 50){
+    } else if (progress > 0 && progress < 50) {
       statPhrase.textContent = `Keep it up!`;
-    } else if(progress >= 50){
+    } else if (progress >= 50) {
       statPhrase.textContent = `Almost there!`;
-    } 
-  }else {
-      statPhrase.textContent = "";
-      progressStat.textContent = "";
     }
+  } else {
+    statPhrase.textContent = "";
+    progressStat.textContent = "";
   }
+}
 
-function celebration(){
+function celebration() {
   const defaults = {
     spread: 360,
     ticks: 200,
@@ -127,7 +137,7 @@ function celebration(){
     shapes: ["star"],
     colors: ["FFE400", "FFBD00", "E89400", "FFCA6C", "FDFFB8"],
   };
-  
+
   function shoot() {
     confetti({
       ...defaults,
@@ -135,7 +145,7 @@ function celebration(){
       scalar: 1.2,
       shapes: ["star"],
     });
-  
+
     confetti({
       ...defaults,
       particleCount: 10,
@@ -143,7 +153,7 @@ function celebration(){
       shapes: ["circle"],
     });
   }
-  
+
   setTimeout(shoot, 0);
   setTimeout(shoot, 500);
   setTimeout(shoot, 1000);
